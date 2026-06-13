@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mistral Transfer - Transférez vos fichiers vers WebDAV avec élégance et simplicité">
+    <meta name="theme-color" content="#ffffff">
+    <title>Mistral Transfer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-leaf"></i>
+                    <span>Mistral Transfer</span>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- Connection Section -->
+            <section class="connection-section" id="connectionSection">
+                <div class="connection-card">
+                    <div class="connection-header">
+                        <h2><i class="fas fa-cloud"></i> Connexion WebDAV</h2>
+                        <p>Connectez-vous à votre serveur WebDAV pour commencer le transfert</p>
+                    </div>
+                    
+                    <form class="connection-form" id="connectionForm" onsubmit="connectWebDAV(event)">
+                        <div class="form-group">
+                            <label for="serverUrl">URL du serveur WebDAV</label>
+                            <div class="input-wrapper">
+                                <input type="url" id="serverUrl" placeholder="https://votre-serveur.com/webdav" 
+                                       value="" required>
+                                <i class="fas fa-server input-icon"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="username">Nom d'utilisateur</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="username" placeholder="votre@email.com" value="" required>
+                                <i class="fas fa-user input-icon"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">Mot de passe</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="password" placeholder="••••••••" value="" required>
+                                <i class="fas fa-lock input-icon"></i>
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">
+                                    <i class="fas fa-eye" id="passwordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-connect" id="connectBtn">
+                                <i class="fas fa-plug"></i>
+                                <span>Se connecter</span>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Saved connections -->
+                    <div class="saved-connections" id="savedConnections">
+                        <h4><i class="fas fa-history"></i> Connexions récentes</h4>
+                        <div class="connections-list" id="connectionsList"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Explorer Section (hidden by default) -->
+            <section class="explorer-section" id="explorerSection" style="display: none;">
+                <div class="explorer-header">
+                    <div class="breadcrumb" id="breadcrumb">
+                        <button class="breadcrumb-item" onclick="navigateTo('')">
+                            <i class="fas fa-folder"></i>
+                            <span>Racine</span>
+                        </button>
+                    </div>
+                    <div class="explorer-actions">
+                        <button class="btn btn-outline" onclick="refreshFiles()" title="Rafraîchir">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="btn btn-outline" onclick="createFolder()" title="Nouveau dossier">
+                            <i class="fas fa-folder-plus"></i>
+                            <span class="desktop-only">Nouveau dossier</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="showUploadModal()" title="Uploader">
+                            <i class="fas fa-upload"></i>
+                            <span class="desktop-only">Uploader</span>
+                        </button>
+                        <button class="btn btn-outline" onclick="disconnect()" title="Déconnecter">
+                            <i class="fas fa-unlink"></i>
+                            <span class="desktop-only">Déconnecter</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Transfer stats -->
+                <div class="transfer-stats" id="transferStats" style="display: none;">
+                    <div class="stat-item">
+                        <i class="fas fa-upload"></i>
+                        <span id="uploadCount">0</span>
+                        <span class="stat-label">Uploads</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-download"></i>
+                        <span id="downloadCount">0</span>
+                        <span class="stat-label">Téléchargements</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-folder"></i>
+                        <span id="folderCount">0</span>
+                        <span class="stat-label">Dossiers</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-file"></i>
+                        <span id="fileCount">0</span>
+                        <span class="stat-label">Fichiers</span>
+                    </div>
+                </div>
+                
+                <!-- Files Grid -->
+                <div class="files-container" id="filesContainer">
+                    <div class="loading-indicator" id="filesLoading">
+                        <div class="spinner">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                        <p>Chargement des fichiers...</p>
+                    </div>
+                    <div class="empty-folder" id="emptyFolder" style="display: none;">
+                        <div class="empty-icon">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <h3>Dossier vide</h3>
+                        <p>Glissez-déposez des fichiers ici ou cliquez sur "Uploader"</p>
+                    </div>
+                    <div class="files-grid" id="filesGrid"></div>
+                </div>
+            </section>
+
+            <!-- Empty State (when not connected) -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>Transférez vos fichiers vers WebDAV</h3>
+                <p>Connectez-vous à votre serveur WebDAV pour commencer</p>
+            </div>
+        </main>
+
+        <!-- Trust Badge -->
+        <div class="trust-badge">
+            <i class="fas fa-leaf"></i>
+            <span>100% sécurisé · Tout est traité côté client · Aucune donnée stockée</span>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-content">
+            <i class="fas fa-check-circle toast-icon success" id="toastIcon"></i>
+            <span class="toast-message" id="toastMessage"></span>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content upload-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-upload"></i> Uploader des fichiers</h3>
+                <button class="modal-close" onclick="closeUploadModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="drop-zone-modal" id="uploadDropZone">
+                    <div class="drop-content">
+                        <div class="drop-icon-modal">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h4>Glissez-déposez vos fichiers ici</h4>
+                        <p>ou cliquez pour parcourir</p>
+                        <button class="btn btn-primary" onclick="triggerFileUpload()">
+                            <i class="fas fa-folder-open"></i>
+                            <span>Parcourir</span>
+                            <input type="file" id="fileUploadInput" multiple style="display: none;">
+                        </button>
+                    </div>
+                </div>
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-container">
+                        <div class="progress-bar" id="uploadProgressBar"></div>
+                    </div>
+                    <div class="file-list" id="uploadFileList"></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeUploadModal()">
+                    <i class="fas fa-times"></i>
+                    <span>Annuler</span>
+                </button>
+                <button class="btn btn-primary" onclick="startUpload()" id="startUploadBtn" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Uploader</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Folder Modal -->
+    <div class="modal" id="createFolderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-folder-plus"></i> Créer un dossier</h3>
+                <button class="modal-close" onclick="closeCreateFolderModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="folderName">Nom du dossier</label>
+                <input type="text" id="folderName" class="modal-input" placeholder="Nouveau dossier" autofocus>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeCreateFolderModal()">
+                    <i class="fas fa-times"></i>
+                    <span>Annuler</span>
+                </button>
+                <button class="btn btn-primary" onclick="confirmCreateFolder()">
+                    <i class="fas fa-check"></i>
+                    <span>Créer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Modal -->
+    <div class="modal" id="renameModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Renommer</h3>
+                <button class="modal-close" onclick="closeRenameModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="renameInput">Nouveau nom</label>
+                <input type="text" id="renameInput" class="modal-input" placeholder="Entrez le nouveau nom" autofocus>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeRenameModal()">
+                    <i class="fas fa-times"></i>
+                    <span>Annuler</span>
+                </button>
+                <button class="btn btn-primary" onclick="confirmRename()">
+                    <i class="fas fa-check"></i>
+                    <span>Renommer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-icon confirm-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 id="confirmTitle">Confirmer la suppression</h3>
+            <p id="confirmMessage">Êtes-vous sûr de vouloir supprimer ce fichier ?</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeConfirmModal()">
+                    <i class="fas fa-times"></i>
+                    <span>Annuler</span>
+                </button>
+                <button class="btn btn-danger" onclick="confirmAction()">
+                    <i class="fas fa-trash"></i>
+                    <span>Supprimer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processing Modal -->
+    <div class="modal" id="processingModal">
+        <div class="modal-content">
+            <div class="modal-icon">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <h3 id="processingTitle">Traitement en cours</h3>
+            <p id="processingMessage">Veuillez patienter...</p>
+            <div class="progress-container">
+                <div class="progress-bar" id="processingProgressBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
