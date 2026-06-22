@@ -1,346 +1,128 @@
 # Mistral Transfer
 
-> **Transférez vos fichiers vers WebDAV avec élégance et simplicité**
+> Client WebDAV 100 % navigateur — multi-sélection, aperçu inline, upload chunké avec reprise.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Pure Client-Side](https://img.shields.io/badge/Client--Side-Only-brightgreen.svg)](https://developer.mozilla.org/en-US/docs/Web/API)
-[![Vanilla JS](https://img.shields.io/badge/Vanilla_JS-100%-yellow.svg)](https://vanilla.js.org/)
-[![Eco Design](https://img.shields.io/badge/Eco_Design-%F0%9F%8C%8F-22C55E.svg)](https://developer.mozilla.org/)
+Vos identifiants et vos fichiers ne quittent jamais votre machine : le navigateur parle directement à votre serveur WebDAV (Nextcloud, ownCloud, Apache mod_dav, Synology, Seafile…). Aucun back-end Mistral Transfer, aucune télémétrie, aucun CDN tiers.
 
 ---
 
-## 🌿 **Aperçu**
+## ✨ Fonctionnalités
 
-Mistral Transfer est une application web **100% côté client** qui permet de se connecter à des serveurs **WebDAV** et de transférer vos fichiers directement dans votre navigateur, sans serveur intermédiaire. Avec un **design écolo/bobo** ultra-clean et moderne, inspiré par les meilleurs outils comme **Squoosh**, **TinyPNG** et **Raycast**.
-
-| Light Mode | Dark Mode |
-|------------|-----------|
-| ![Light Mode](https://img.shields.io/badge/Light-White?style=for-the-badge&color=white) | ![Dark Mode](https://img.shields.io/badge/Dark-Deep_Green?style=for-the-badge&color=062010) |
-
----
-
-## ✨ **Fonctionnalités**
-
-### 🔐 **Connexion Sécurisée**
-- ✅ **Authentification Basic Auth** : Connexion avec nom d'utilisateur et mot de passe
-- ✅ **URL personnalisable** : Support de n'importe quel serveur WebDAV compatible
-- ✅ **Connexions sauvegardées** : Historique des dernières connexions (sans mot de passe)
-- ✅ **Détection automatique** : Vérification de la compatibilité du serveur
-
-### 📁 **Explorateur de Fichiers**
-- ✅ **Navigation arborescente** : Parcourez vos dossiers WebDAV
-- ✅ **Breadcrumb** : Navigation intuitive avec fil d'Ariane
-- ✅ **Liste des fichiers/dossiers** : Affichage clair avec icônes spécifiques
-- ✅ **Métadonnées** : Taille, date de modification, type de fichier
-- ✅ **Rafraîchissement** : Actualisation manuelle du contenu
-
-### 📤 **Upload de Fichiers**
-- ✅ **Glisser-déposer** : Ajout multiple de fichiers
-- ✅ **Sélection via dialogue** : Bouton de parcours classique
-- ✅ **File d'attente** : Gestion des uploads multiples
-- ✅ **Progression en temps réel** : Barre de progression par fichier
-- ✅ **Statut des uploads** : Succès, erreur, en attente
-
-### 📥 **Téléchargement**
-- ✅ **Téléchargement individuel** : Un clic pour télécharger un fichier
-- ✅ **Téléchargement direct** : Pas de stockage intermédiaire
-
-### 📂 **Gestion des Dossiers**
-- ✅ **Création de dossiers** : Nouveau dossier dans le chemin courant
-- ✅ **Navigation** : Double-clic ou clic pour ouvrir un dossier
-- ✅ **Retour arrière** : Via le breadcrumb
-
-### 🗑️ **Gestion des Fichiers**
-- ✅ **Renommage** : Modification du nom des fichiers/dossiers
-- ✅ **Suppression** : Avec confirmation de sécurité
-- ✅ **Actions rapides** : Boutons d'action sur chaque élément
-
-### 📊 **Statistiques**
-- ✅ **Compteur d'uploads** : Nombre total de fichiers uploadés
-- ✅ **Compteur de téléchargements** : Nombre total de fichiers téléchargés
-- ✅ **Compteur de dossiers/fichiers** : Dans le répertoire courant
-
-### 🎨 **Design & Expérience**
-- ✅ **Thème clair/sombre** avec détection automatique
-- ✅ Design **ultra-clean** et moderne
-- ✅ **Responsive** (mobile-first)
-- ✅ **Animations fluides** et feedback visuel
-- ✅ **Icônes écolo** : feuille, nuage, dossier
-- ✅ **Pattern végétal** très subtil en background
-- ✅ **Notifications toast** : Feedback immédiat des actions
-
-### 🔒 **Sécurité & Vie privée**
-- ✅ **100% côté client** – Aucun fichier ne transite par nos serveurs
-- ✅ **Authentification directe** – Connexion directe au serveur WebDAV
-- ✅ **Pas de stockage** – Les mots de passe ne sont pas sauvegardés
-- ✅ **Chiffrement** – HTTPS requis pour la connexion
-- ✅ **Pas de tracking** – Aucune donnée n'est collectée
+- **Explorer WebDAV** — `PROPFIND` Depth: 1 avec parsing namespace-safe, tri colonnable (nom / taille / date), fil d'Ariane intelligent, raccourcis clavier (`⌘A`, `Escape`, `Delete`).
+- **Multi-sélection** — `clic`, `⌘/Ctrl-clic`, `Shift-clic` (range). Barre d'actions contextuelle pour téléchargement, déplacement (`MOVE`) et suppression en lot.
+- **Aperçu inline** — images, vidéos, audio, PDF, texte, code, Markdown rendu en HTML sûr. Limite 25 Mio (configurable).
+- **Téléversement chunké** — `Content-Range PUT` pour les fichiers > 100 Mio, retries exponentiels sur erreurs réseau / 5xx, file persistante dans la session, fallback automatique en PUT simple si le serveur ne supporte pas le chunking. Glisser-déposer direct sur la grille.
+- **PWA installable** — service worker via `vite-plugin-pwa`, fonctionne hors-ligne pour l'interface.
+- **Thème clair / sombre** — détection système + override persistant.
 
 ---
 
-## 🚀 **Utilisation**
+## 🧰 Stack
 
-### Pré-requis
-- Un **serveur WebDAV** accessible (Nextcloud, OwnCloud, Seafile, Apache avec mod_dav, etc.)
-- Un **navigateur moderne** (Chrome, Firefox, Safari, Edge)
-- Une **connexion HTTPS** (recommandée pour la sécurité)
+| Couche | Choix | Pourquoi |
+|---|---|---|
+| Bundler | **Vite 5** | Build statique optimisé, dev server instantané. |
+| Langage | **TypeScript strict** | `noUncheckedIndexedAccess`, `strict`, zéro `any` toléré. |
+| UI | **DOM natif** | Pas de framework — l'app reste sous 50 ko de JS gzipé. |
+| Icônes | **SVG inline** | Pas de FontAwesome, pas de Google Fonts, pas de CDN tiers. |
+| PWA | **vite-plugin-pwa** + Workbox | Service worker prêt à installer. |
 
-### Méthode 1 : Ouverture locale
-1. Téléchargez ou clonez ce dépôt
-2. Ouvrez le fichier `index.html` dans votre navigateur
-3. Entrez l'URL de votre serveur WebDAV, votre nom d'utilisateur et mot de passe
-4. Cliquez sur "Se connecter"
+```
+src/
+├── webdav/        # Client (PROPFIND, MKCOL, MOVE, COPY, DELETE, PUT chunké…)
+│   ├── client.ts
+│   ├── parser.ts  # multistatus namespace-safe
+│   ├── path.ts    # encode/decode segment-by-segment
+│   ├── uploader.ts
+│   └── types.ts
+├── ui/            # Composants vanilla (toast, modal, breadcrumb, file grid…)
+├── state/         # Store + persistance localStorage
+├── utils/         # format, mime, dom helpers
+└── styles/        # tokens.css, reset.css, app.css
+```
 
-### Méthode 2 : Serveur local (pour le développement)
+---
+
+## 🚀 Développement
+
 ```bash
-cd mistral-transfer
-python -m http.server 8000
-# Ouvrez http://localhost:8000 dans votre navigateur
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # tsc --noEmit && vite build  →  dist/
+npm run preview    # sert dist/ localement
+npm run typecheck  # tsc --noEmit
 ```
 
-### Méthode 3 : Déploiement
-Déployez simplement les 3 fichiers (`index.html`, `style.css`, `script.js`) sur n'importe quel hébergement web (Netlify, Vercel, GitHub Pages, etc.).
+Le dossier `dist/` est purement statique : déployable sur n'importe quel hébergement (GitHub Pages, Netlify, Vercel, Cloudflare Pages, S3…).
 
 ---
 
-## 📋 **Configuration du Serveur WebDAV**
+## 📡 Compatibilité serveur
 
-### Serveurs Compatibles
-| Serveur | URL WebDAV typique | Remarques |
-|---------|---------------------|-----------|
-| **Nextcloud** | `https://votre-nextcloud.com/remote.php/dav/files/VOTRE_USER/` | Accès aux fichiers personnels |
-| **OwnCloud** | `https://votre-owncloud.com/remote.php/dav/files/VOTRE_USER/` | Similaire à Nextcloud |
-| **Seafile** | `https://votre-seafile.com/seafdav/` | Accès complet |
-| **Apache** | `https://votre-serveur.com/webdav/` | Nécessite mod_dav activé |
-| **IIS** | `https://votre-serveur.com/webdav/` | WebDAV activé sur IIS |
-| **Synology** | `https://votre-nas.synology.me/webdav/` | DSM avec WebDAV activé |
-| **QNAP** | `https://votre-nas.qnapcloud.com:5006/webdav/` | QTS avec WebDAV activé |
+Le client n'utilise que des verbes WebDAV standards (RFC 4918) :
 
-### Configuration Nextcloud/OwnCloud
-1. Activez WebDAV dans les paramètres du serveur
-2. L'URL est généralement : `https://[votre-domaine]/remote.php/dav/files/[votre-utilisateur]/`
-3. Utilisez votre nom d'utilisateur et mot de passe
-
-### Configuration Apache
-```apache
-# Dans votre configuration Apache
-<Location /webdav>
-    DAV On
-    AuthType Basic
-    AuthName "WebDAV"
-    AuthUserFile /chemin/vers/.htpasswd
-    Require valid-user
-</Location>
-```
-
----
-
-## 🛠️ **Stack Technique**
-
-| Composant | Technologie |
-|-----------|-------------|
-| **Frontend** | HTML5, CSS3, Vanilla JavaScript (ES6+) |
-| **Polices** | [Inter](https://fonts.google.com/specimen/Inter) (Google Fonts) |
-| **Icônes** | [Font Awesome 6](https://fontawesome.com/) |
-| **WebDAV** | Fetch API + XML parsing |
-| **Aucun framework** | Zero dependency |
-
-### Fonctionnalités du navigateur requises
-- API Fetch
-- DOM Parser (pour analyser les réponses XML WebDAV)
-- Blob API (pour les téléchargements)
-- File API (pour les uploads)
-
-### Méthodes WebDAV implémentées
-| Méthode | Usage |
-|---------|-------|
-| `PROPFIND` / `SEARCH` | Lister les fichiers/dossiers |
-| `GET` | Télécharger un fichier |
-| `PUT` | Uploader un fichier |
+| Verbe | Usage |
+|---|---|
+| `PROPFIND` (Depth: 1) | Lister un dossier |
+| `GET` | Télécharger / aperçu |
+| `PUT` | Téléverser (avec `Content-Range` pour le chunked) |
 | `MKCOL` | Créer un dossier |
-| `DELETE` | Supprimer un fichier/dossier |
-| `MOVE` | Renommer un fichier/dossier |
-| `HEAD` | Obtenir les métadonnées |
+| `MOVE` / `COPY` | Renommer, déplacer |
+| `DELETE` | Supprimer |
 
----
+Testé contre les implémentations courantes : Nextcloud, ownCloud, Apache `mod_dav`, Synology DSM, Seafile, Caddy `file_server`.
 
-## 📂 **Structure du Projet**
+### CORS
 
-```
-mistral-transfer/
-├── index.html          # Structure HTML + interfaces
-├── style.css           # Design system + composants
-└── script.js           # Logique applicative + client WebDAV
-```
-
----
-
-## 🎨 **Design System**
-
-### Couleurs
-
-#### Palette Neutre (Light Mode)
-| Variable | Couleur | Usage |
-|----------|---------|-------|
-| `--color-white` | `#ffffff` | Fond principal |
-| `--color-gray-50` | `#f9fafb` | Fond secondaire |
-| `--color-gray-200` | `#e5e7eb` | Bordures |
-| `--color-gray-700` | `#374151` | Texte secondaire |
-| `--color-gray-900` | `#111827` | Texte principal |
-
-#### Couleurs Écolo (Accent)
-| Variable | Couleur | Usage |
-|----------|---------|-------|
-| `--color-accent` | `#22C55E` | Boutons, états actifs |
-| `--color-accent-light` | `#4ADE80` | Survol, accents clairs |
-| `--color-accent-dark` | `#16A34A` | Clic, accents foncés |
-
-#### Couleurs Nature
-| Variable | Couleur | Usage |
-|----------|---------|-------|
-| `--color-nature-light` | `#86EFAC` | Fond pattern |
-| `--color-nature-medium` | `#4ADE80` | Accents moyens |
-| `--color-nature-dark` | `#059669` | Accents profonds |
-
-#### Couleurs sémantiques
-| Variable | Couleur | Usage |
-|----------|---------|-------|
-| `--color-success` | `#16A34A` | Succès |
-| `--color-warning` | `#FDE047` | Avertissements |
-| `--color-error` | `#DC2626` | Erreurs |
-
-### Thème Écolo/Bobo
-
-- **Light Mode** : Fond blanc avec motif végétal subtil (points verts clairs `#86EFAC`)
-- **Dark Mode** : Palette de verts profonds pour un look naturel et apaisant
-  - Fond principal : `#062010` (vert très foncé)
-  - Fond secondaire : `#0F351F` (vert forêt)
-  - Bordures : Teintes de vert terreux
-- **Icônes** : Feuille (`fa-leaf`) pour le logo, nuage (`fa-cloud`) pour la connexion
-- **Effet visuel** : Motif radial végétal en background très discret
-
----
-
-## 🌿 **Thème Écolo/Bobo**
-
-L'outil Mistral Transfer adopte un design inspiré par la nature :
-
-- **Couleurs vertes apaisantes** : Palette de verts lumineux et profonds
-- **Motif végétal** : Background subtil avec des points verts
-- **Icônes naturelles** : Feuilles, nuages, dossiers
-- **Ambiance zen** : Design épuré et rassurant
-- **Respect de l'environnement** : Comme votre approche du développement !
-
----
-
-## 🎯 **Workflow Typique**
-
-1. **Connexion** : Entrez l'URL du serveur, nom d'utilisateur et mot de passe
-2. **Navigation** : Parcourez vos dossiers via le breadcrumb ou en cliquant sur les dossiers
-3. **Upload** : Glissez-déposez des fichiers ou cliquez sur "Uploader"
-4. **Validation** : Cliquez sur "Uploader" pour lancer le transfert
-5. **Gestion** : Renommez, supprimez, téléchargez les fichiers
-6. **Déconnexion** : Quand vous avez terminé
-
----
-
-## 📱 **Responsive Design**
-
-| Taille écran | Disposition |
-|--------------|-------------|
-| Mobile (< 640px) | Affichage vertical, une colonne |
-| Tablette (640px - 1024px) | Grille 2 colonnes pour les fichiers |
-| Desktop (> 1024px) | Grille 3-4 colonnes, navigation optimisée |
-
----
-
-## 🔧 **Personnalisation**
-
-### Thème
-Le thème est persistant via `localStorage` :
-- `mistralTransferTheme` : `'light'` ou `'dark'`
-
-### Connexions
-Les connexions récentes sont sauvegardées (sans mot de passe) :
-- `mistralTransferConfig` : Objet JSON avec les connexions (URL + username)
-
----
-
-## 🐛 **Dépannage**
-
-### Problèmes connus
-| Problème | Solution |
-|----------|----------|
-| Connexion échoue | Vérifiez l'URL, le nom d'utilisateur et le mot de passe |
-| Serveur non détecté | Assurez-vous que WebDAV est activé sur le serveur |
-| Upload échoue | Vérifiez les permissions d'écriture sur le serveur |
-| Téléchargement bloqué | Acceptez les popups dans votre navigateur |
-| CORS errors | Le serveur doit autoriser votre origine via CORS |
-
-### Erreurs CORS
-Si vous obtenez des erreurs CORS, votre serveur WebDAV doit être configuré pour accepter les requêtes depuis votre origine. Exemple pour Apache :
+Le serveur doit autoriser l'origine d'où vous chargez l'app. Exemple Apache :
 
 ```apache
-Header set Access-Control-Allow-Origin "*"
-Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PROPFIND, MKCOL, MOVE"
-Header set Access-Control-Allow-Headers "Authorization, Content-Type, Depth, Destination"
+Header set Access-Control-Allow-Origin "https://votre-app.example"
+Header set Access-Control-Allow-Methods "GET, PUT, DELETE, OPTIONS, PROPFIND, MKCOL, MOVE, COPY"
+Header set Access-Control-Allow-Headers "Authorization, Content-Type, Depth, Destination, Overwrite, Content-Range, If, Lock-Token"
 Header set Access-Control-Allow-Credentials "true"
 ```
 
-### Compatibilité navigateur
-| Navigateur | Support | Remarques |
-|------------|---------|-----------|
-| Chrome | ✅ Complete | Recommandé |
-| Firefox | ✅ Complete | |
-| Safari | ⚠️ Partiel | Problèmes avec certaines méthodes WebDAV |
-| Edge | ✅ Complete | |
-| Mobile Chrome | ✅ Complete | |
-| Mobile Safari | ⚠️ Limité | Problèmes avec WebDAV |
+Si vous hébergez Mistral Transfer sur la même origine que votre serveur WebDAV, aucune configuration CORS n'est nécessaire.
 
 ---
 
-## 🤝 **Contribution**
+## ⌨️ Raccourcis
 
-Les contributions sont les bienvenues ! Voici comment contribuer :
-
-1. **Fork** le projet
-2. Créez une branche (`git checkout -b feature/amazing-feature`)
-3. **Commit** vos changements (`git commit -m 'Add amazing feature'`)
-4. **Push** vers la branche (`git push origin feature/amazing-feature`)
-5. Ouvrez une **Pull Request**
-
-### Idées de contribution
-- Support de WebDAV avancé (PROPPATCH, LOCK, etc.)
-- Gestion des permissions
-- Synchronisation automatique
-- Historique des transferts
-- Support du chunked upload pour les gros fichiers
+| Raccourci | Action |
+|---|---|
+| `⌘/Ctrl + A` | Sélectionner tout le dossier courant |
+| `Shift + clic` | Sélection en plage |
+| `⌘/Ctrl + clic` | Ajouter / retirer de la sélection |
+| `Espace` | Cocher/décocher la ligne focus |
+| `Entrée` | Ouvrir le dossier / afficher l'aperçu |
+| `Delete` / `Backspace` | Supprimer la sélection |
+| `Escape` | Fermer l'aperçu, vider la sélection |
 
 ---
 
-## 📄 **Licence**
+## 🔒 Sécurité & vie privée
 
-Distribué sous la licence **MIT**. Voir le fichier `LICENSE` pour plus d'informations.
-
----
-
-## 🙏 **Remerciements**
-
-- **Squoosh** - Pour l'inspiration de l'interface et de l'UX
-- **TinyPNG** - Pour le design épuré
-- **Raycast** - Pour l'inspiration des pill buttons et du style moderne
-- **Inter** - Une police open-source exceptionnelle
-- **Font Awesome** - Des icônes ouvertes et de qualité
-- **La nature** 🌿 - Pour l'inspiration du design écolo/bobo
+- Aucun back-end, aucun proxy : votre navigateur parle directement au serveur WebDAV via HTTPS.
+- Le mot de passe reste en mémoire pendant la session, jamais persisté.
+- Les connexions récentes (URL + utilisateur uniquement) sont stockées dans `localStorage`.
+- Rendu Markdown réalisé avec un parser maison qui échappe l'HTML : pas de pass-through, pas d'`<a href="javascript:…">`.
+- Tous les noms de fichiers sont insérés via `textContent` (jamais `innerHTML`) côté UI.
 
 ---
 
-## 📞 **Contact & Support**
+## 📦 Build & taille
 
-Pour toute question ou suggestion, n'hésitez pas à ouvrir une **Issue** ou une **Pull Request**.
+```
+dist/index.html                                   0.98 kB │ gzip:  0.51 kB
+dist/assets/index-*.css                          20.3 kB  │ gzip:  4.3 kB
+dist/assets/index-*.js                           45.1 kB  │ gzip: 15.2 kB
+```
+
+Pas de polices web, pas de runtime, pas de polyfills inutiles.
 
 ---
 
-<p align="center">
-  Made with ❤️ and <a href="https://mistral.ai">Mistral AI</a> · Design Écolo/Bobo
-</p>
+## 📄 Licence
+
+MIT.
