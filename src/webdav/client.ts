@@ -140,10 +140,8 @@ export class WebDAVClient {
    * PUT a file or a Blob with progress reporting and abort support.
    *
    * We use XHR rather than fetch because Safari/Firefox still lack a stable
-   * `ReadableStream` request body, which is what fetch would need for chunk
-   * progress. XHR gives us a clean `progress` event on uploads everywhere.
-   *
-   * Pass `contentRange` and `totalSize` for chunked PUTs (RFC 7233 semantics).
+   * `ReadableStream` request body, which is what fetch would need for upload
+   * progress events. XHR gives us a clean `progress` event everywhere.
    */
   put(
     path: string,
@@ -152,7 +150,6 @@ export class WebDAVClient {
       contentType?: string;
       onProgress?: (p: UploadProgress) => void;
       signal?: AbortSignal;
-      contentRange?: { start: number; end: number; total: number };
     } = {},
   ): UploadHandle {
     const url = this.url(path);
@@ -164,10 +161,6 @@ export class WebDAVClient {
       xhr.open('PUT', url, true);
       xhr.setRequestHeader('Authorization', this.auth);
       xhr.setRequestHeader('Content-Type', options.contentType ?? body.type ?? 'application/octet-stream');
-      if (options.contentRange) {
-        const { start, end, total } = options.contentRange;
-        xhr.setRequestHeader('Content-Range', `bytes ${start}-${end}/${total}`);
-      }
 
       xhr.upload.addEventListener('loadstart', () => {
         startTime = performance.now();

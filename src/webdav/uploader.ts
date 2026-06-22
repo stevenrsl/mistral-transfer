@@ -1,17 +1,22 @@
 /**
- * Queue-based uploader with progress, retry, and chunked transfer for big files.
+ * Queue-based uploader with concurrency, abort, and retry-on-transient-error.
  *
- * Chunked uploads use standard `Content-Range` on PUT — supported by Apache
- * mod_dav and most well-behaved WebDAV implementations. Servers that reject
- * it (some Nextcloud configurations) cause us to fall back to a single PUT.
+ * Earlier iterations attempted RFC 7233 Content-Range PUTs for resumable
+ * chunked transfer, but partial PUT is *not* a WebDAV-standard feature —
+ * each server invents its own protocol (Nextcloud's chunked v2 endpoint,
+ * ownCloud's bundling, kDrive rejects with 400 entirely). Rather than
+ * silently corrupt files, we stick to whole-resource PUT and rely on
+ * exponential-backoff retries to recover from network blips.
+ *
+ * In-session resume: aborted / failed tasks can be retried. Cross-session
+ * resume isn't possible without persisting the File handle, which the
+ * browser's standard File API doesn't allow.
  */
 import { WebDAVClient } from './client';
 import { joinPath } from './path';
 import { WebDAVError } from './types';
 import type { UploadTask } from './types';
 
-const CHUNK_THRESHOLD = 100 * 1024 * 1024; // 100 MiB
-const CHUNK_SIZE = 8 * 1024 * 1024; // 8 MiB
 const MAX_RETRIES = 4;
 const RETRY_BASE_MS = 800;
 
@@ -85,6 +90,8 @@ export class Uploader {
     if (!task || (task.status !== 'error' && task.status !== 'cancelled')) return;
     task.status = 'queued';
     task.error = null;
+    task.loaded = 0;
+    task.speed = 0;
     this.emit({ type: 'task-updated', task });
     this.pump();
   }
@@ -129,11 +136,18 @@ export class Uploader {
     this.aborts.set(task.id, controller);
 
     try {
-      if (task.file.size >= CHUNK_THRESHOLD) {
-        await this.runChunked(task, controller.signal);
-      } else {
-        await this.runSingle(task, controller.signal);
-      }
+      await withRetry(async () => {
+        const handle = this.client.put(task.destPath, task.file, {
+          signal: controller.signal,
+          onProgress: (p) => {
+            task.loaded = p.loaded;
+            task.total = p.total;
+            task.speed = p.speed;
+            this.emit({ type: 'task-updated', task });
+          },
+        });
+        await handle.promise;
+      }, controller.signal);
       task.status = 'success';
       task.loaded = task.total;
       this.emit({ type: 'task-updated', task });
@@ -149,68 +163,6 @@ export class Uploader {
       this.aborts.delete(task.id);
       this.active--;
       this.pump();
-    }
-  }
-
-  private async runSingle(task: UploadTask, signal: AbortSignal): Promise<void> {
-    await withRetry(async () => {
-      const handle = this.client.put(task.destPath, task.file, {
-        signal,
-        onProgress: (p) => {
-          task.loaded = p.loaded;
-          task.total = p.total;
-          task.speed = p.speed;
-          this.emit({ type: 'task-updated', task });
-        },
-      });
-      await handle.promise;
-    }, signal);
-  }
-
-  private async runChunked(task: UploadTask, signal: AbortSignal): Promise<void> {
-    let offset = task.resumeOffset;
-    const total = task.file.size;
-    let chunkedSupported = true;
-
-    while (offset < total) {
-      if (signal.aborted) throw new WebDAVError('Aborted', 0, 'PUT', task.destPath);
-      const end = Math.min(offset + CHUNK_SIZE, total);
-      const chunk = task.file.slice(offset, end);
-
-      const baseLoaded = offset;
-      try {
-        await withRetry(async () => {
-          const handle = this.client.put(task.destPath, chunk, {
-            signal,
-            contentRange: { start: offset, end: end - 1, total },
-            onProgress: (p) => {
-              task.loaded = baseLoaded + p.loaded;
-              task.speed = p.speed;
-              this.emit({ type: 'task-updated', task });
-            },
-          });
-          await handle.promise;
-        }, signal);
-      } catch (err) {
-        if (
-          err instanceof WebDAVError &&
-          (err.status === 501 || err.status === 405)
-        ) {
-          chunkedSupported = false;
-        }
-        if (!chunkedSupported) {
-          task.resumeOffset = 0;
-          task.loaded = 0;
-          this.emit({ type: 'task-updated', task });
-          await this.runSingle(task, signal);
-          return;
-        }
-        throw err;
-      }
-
-      offset = end;
-      task.resumeOffset = offset;
-      this.emit({ type: 'task-updated', task });
     }
   }
 }

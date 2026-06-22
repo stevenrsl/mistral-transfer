@@ -1,6 +1,6 @@
 # Mistral Transfer
 
-> Client WebDAV 100 % navigateur — multi-sélection, aperçu inline, upload chunké avec reprise.
+> Client WebDAV 100 % navigateur — multi-sélection, aperçu inline, upload résilient avec reprise sur erreur réseau.
 
 Vos identifiants et vos fichiers ne quittent jamais votre machine : le navigateur parle directement à votre serveur WebDAV (Nextcloud, ownCloud, Apache mod_dav, Synology, Seafile…). Aucun back-end Mistral Transfer, aucune télémétrie, aucun CDN tiers.
 
@@ -11,7 +11,7 @@ Vos identifiants et vos fichiers ne quittent jamais votre machine : le navigateu
 - **Explorer WebDAV** — `PROPFIND` Depth: 1 avec parsing namespace-safe, tri colonnable (nom / taille / date), fil d'Ariane intelligent, raccourcis clavier (`⌘A`, `Escape`, `Delete`).
 - **Multi-sélection** — `clic`, `⌘/Ctrl-clic`, `Shift-clic` (range). Barre d'actions contextuelle pour téléchargement, déplacement (`MOVE`) et suppression en lot.
 - **Aperçu inline** — images, vidéos, audio, PDF, texte, code, Markdown rendu en HTML sûr. Limite 25 Mio (configurable).
-- **Téléversement chunké** — `Content-Range PUT` pour les fichiers > 100 Mio, retries exponentiels sur erreurs réseau / 5xx, file persistante dans la session, fallback automatique en PUT simple si le serveur ne supporte pas le chunking. Glisser-déposer direct sur la grille.
+- **Téléversement résilient** — `PUT` standard avec progress XHR réelle, retries exponentiels sur erreurs réseau / 5xx / 429, concurrence configurable (2 par défaut), abandon / reprise en session. Glisser-déposer direct sur la grille.
 - **PWA installable** — service worker via `vite-plugin-pwa`, fonctionne hors-ligne pour l'interface.
 - **Thème clair / sombre** — détection système + override persistant.
 
@@ -65,7 +65,7 @@ Le client n'utilise que des verbes WebDAV standards (RFC 4918) :
 |---|---|
 | `PROPFIND` (Depth: 1) | Lister un dossier |
 | `GET` | Télécharger / aperçu |
-| `PUT` | Téléverser (avec `Content-Range` pour le chunked) |
+| `PUT` | Téléverser (whole-resource) |
 | `MKCOL` | Créer un dossier |
 | `MOVE` / `COPY` | Renommer, déplacer |
 | `DELETE` | Supprimer |
@@ -79,7 +79,7 @@ Le serveur doit autoriser l'origine d'où vous chargez l'app. Exemple Apache :
 ```apache
 Header set Access-Control-Allow-Origin "https://votre-app.example"
 Header set Access-Control-Allow-Methods "GET, PUT, DELETE, OPTIONS, PROPFIND, MKCOL, MOVE, COPY"
-Header set Access-Control-Allow-Headers "Authorization, Content-Type, Depth, Destination, Overwrite, Content-Range, If, Lock-Token"
+Header set Access-Control-Allow-Headers "Authorization, Content-Type, Depth, Destination, Overwrite, If, Lock-Token"
 Header set Access-Control-Allow-Credentials "true"
 ```
 
